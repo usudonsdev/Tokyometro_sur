@@ -25,6 +25,18 @@ def extract_features(image_path):
     
     return [avg_sat, edge_density, brightness_std]
 
+LINE_COLORS = {
+    "Ginza": "#F6AE1A",
+    "Marunouchi": "#E60012",
+    "Hibiya": "#B5B5B6",
+    "Tozai": "#009BBF",
+    "Chiyoda": "#00BB85",
+    "Yurakucho": "#C1A470",
+    "Hanzomon": "#8F76D6",
+    "Nanboku": "#00ADA9",
+    "Fukutoshin": "#9C5E31"
+}
+
 def compare_lines(line_folders):
     all_data = []
     
@@ -44,14 +56,25 @@ def compare_lines(line_folders):
     # --- 可視化 ---
     plt.figure(figsize=(12, 5))
     
+    line_order = list(line_folders.keys())
+    palette = {k: LINE_COLORS.get(k, "#666666") for k in line_order}
+
     # エッジ密度の比較（機能的かどうかの指標）
     plt.subplot(1, 2, 1)
-    sns.boxplot(x='Line', y='EdgeDensity', data=df)
+    sns.boxplot(x='Line', y='EdgeDensity', data=df, order=line_order, palette=palette)
     plt.title("Comparison of Structural Simplicity (Edge Density)")
     
     # 彩度 vs 輝度分散の散布図（上品さ・高級感のポジショニング）
     plt.subplot(1, 2, 2)
-    sns.scatterplot(x='Saturation', y='BrightnessStd', hue='Line', data=df, s=100)
+    sns.scatterplot(
+        x='Saturation',
+        y='BrightnessStd',
+        hue='Line',
+        data=df,
+        s=100,
+        hue_order=line_order,
+        palette=palette
+    )
 
     for i in range(df.shape[0]):
         label = df.Station.iloc[i].split('_')
