@@ -26,15 +26,15 @@ def extract_features(image_path):
     return [avg_sat, edge_density, brightness_std]
 
 LINE_COLORS = {
-    "Ginza": "#F6AE1A",
-    "Marunouchi": "#E60012",
-    "Hibiya": "#B5B5B6",
-    "Tozai": "#009BBF",
-    "Chiyoda": "#00BB85",
-    "Yurakucho": "#C1A470",
-    "Hanzomon": "#8F76D6",
-    "Nanboku": "#00ADA9",
-    "Fukutoshin": "#9C5E31"
+    "G": "#F6AE1A",
+    "M": "#E60012",
+    "H": "#B5B5B6",
+    "T": "#009BBF",
+    "C": "#00BB85",
+    "Y": "#C1A470",
+    "Z": "#8F76D6",
+    "N": "#00ADA9",
+    "F": "#9C5E31"
 }
 
 def compare_lines(line_folders):
@@ -54,18 +54,20 @@ def compare_lines(line_folders):
     )
     
     # --- 可視化 ---
-    plt.figure(figsize=(12, 5))
+    plt.figure(figsize=(18, 5))
     
     line_order = list(line_folders.keys())
     palette = {k: LINE_COLORS.get(k, "#666666") for k in line_order}
 
     # エッジ密度の比較（機能的かどうかの指標）
-    plt.subplot(1, 2, 1)
+    plt.subplot(1, 3, 1)
     sns.boxplot(x='Line', y='EdgeDensity', data=df, order=line_order, palette=palette)
     plt.title("Comparison of Structural Simplicity (Edge Density)")
+    plt.xlabel("Line")
+    plt.ylabel("Edge Density")
     
     # 彩度 vs 輝度分散の散布図（上品さ・高級感のポジショニング）
-    plt.subplot(1, 2, 2)
+    plt.subplot(1, 3, 2)
     sns.scatterplot(
         x='Saturation',
         y='BrightnessStd',
@@ -75,6 +77,8 @@ def compare_lines(line_folders):
         hue_order=line_order,
         palette=palette
     )
+    plt.xlabel("Saturation")
+    plt.ylabel("Brightness Std")
 
     for i in range(df.shape[0]):
         label = df.Station.iloc[i].split('_')
@@ -87,21 +91,72 @@ def compare_lines(line_folders):
         )
         
     plt.title("Vibe Positioning: Saturation vs Light Contrast")
-    
+
+    # --- 路線ごとの重心プロット ---
+    centroids = df.groupby('Line', as_index=False)[['Saturation', 'BrightnessStd']].mean()
+
+    plt.subplot(1, 3, 3)
+    sns.scatterplot(
+        x='Saturation',
+        y='BrightnessStd',
+        hue='Line',
+        data=centroids,
+        s=140,
+        hue_order=line_order,
+        palette=palette,
+        legend=True
+    )
+
+    for i in range(centroids.shape[0]):
+        plt.text(
+            x=centroids.Saturation[i] + 0.5,
+            y=centroids.BrightnessStd[i],
+            s=centroids.Line[i],
+            fontsize=9,
+            alpha=0.9
+        )
+
+    plt.title("Line Centroids: Saturation vs Brightness Std")
+    plt.xlabel("Saturation")
+    plt.ylabel("Brightness Std")
+    plt.legend(title="Line")
+    plt.tight_layout()
+    plt.show()
+
+    # --- 重心間距離の可視化（3特徴量） ---
+    centroids3 = df.groupby('Line', as_index=False)[
+        ['Saturation', 'EdgeDensity', 'BrightnessStd']
+    ].mean()
+    features = centroids3[['Saturation', 'EdgeDensity', 'BrightnessStd']].to_numpy()
+    diff = features[:, None, :] - features[None, :, :]
+    dist = np.sqrt(np.sum(diff ** 2, axis=2))
+
+    plt.figure(figsize=(7, 6))
+    sns.heatmap(
+        dist,
+        xticklabels=centroids3['Line'],
+        yticklabels=centroids3['Line'],
+        cmap='viridis',
+        annot=True,
+        fmt='.2f'
+    )
+    plt.title("Centroid Distance (Euclidean, 3 Features)")
+    plt.xlabel("Line")
+    plt.ylabel("Line")
     plt.tight_layout()
     plt.show()
     return df
 
 # 使用例: フォルダ構造を用意して実行
 line_folders = {
-    "Hibiya": "./img/hibiya_line/",
-    "Yurakucho": "./img/yurakucho_line/",
-    "Ginza": "./img/ginza_line/",
-    "Hanzomon": "./img/hanzomon_line/",
-    "Fukutoshin": "./img/fukutoshin_line/",
-    "Chiyoda": "./img/chiyoda_line/",
-    "Nanboku": "./img/nanboku_line/",
-    "Marunouchi": "./img/marunouchi_line/",
-    "Tozai": "./img/tozai_line/"
+    "H": "./img/hibiya_line/",
+    "Y": "./img/yurakucho_line/",
+    "G": "./img/ginza_line/",
+    "Z": "./img/hanzomon_line/",
+    "F": "./img/fukutoshin_line/",
+    "C": "./img/chiyoda_line/",
+    "N": "./img/nanboku_line/",
+    "M": "./img/marunouchi_line/",
+    "T": "./img/tozai_line/"
 }
 df_results = compare_lines(line_folders)
