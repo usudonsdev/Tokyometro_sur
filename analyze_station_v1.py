@@ -72,6 +72,13 @@ def compare_lines(line_folders):
 # 使用例: フォルダ構造を用意して実行
 line_folders = {
     "Hibiya": "./img/hibiya_line/",
-    "Yurakucho": "./img/yurakucho_line/"
+    "Yurakucho": "./img/yurakucho_line/",
+    "Ginza": "./img/ginza_line/",
+    "Hanzomon": "./img/hanzomon_line/",
+    "Fukutoshin": "./img/fukutoshin_line/",
+    "Chiyoda": "./img/chiyoda_line/",
+    "Nanboku": "./img/nanboku_line/",
+    "Marunouchi": "./img/marunouchi_line/",
+    "Tozai": "./img/tozai_line/"
 }
 df_results = compare_lines(line_folders)
